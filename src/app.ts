@@ -6,7 +6,6 @@ import authRoutes from './modules/auth/auth.routes';
 
 const app = express();
 
-// credentials: true обязателен для передачи httpOnly cookie между доменами фронта и бэка
 app.use(
   cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -19,9 +18,9 @@ app.use(cookieParser());
 
 // Эндпоинты API v1
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/products', productRoutes);
+app.use('/api/v1', productRoutes);
 
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Backend is running smoothly' });
 });
 

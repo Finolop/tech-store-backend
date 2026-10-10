@@ -12,25 +12,20 @@ enum Role {
   ADMIN
 }
 
-enum OrderStatus {
-  PENDING
-  PAID
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
 model User {
-  id            String         @id @default(uuid())
-  firstName     String
-  lastName      String
-  email         String         @unique
-  phone         String         @unique
-  password      String
-  role          Role           @default(CUSTOMER)
-  orders        Order[]
+  id           String         @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String         @unique
+  phone        String         @unique
+  password     String         // Изменено с passwordHash на password под auth.service
+  role         Role           @default(CUSTOMER)
   refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  cartItems    CartItem[]
+  favorites    Favorite[]
 }
 
 model RefreshToken {
@@ -43,45 +38,62 @@ model RefreshToken {
 }
 
 model Category {
-  id       String    @id @default(uuid())
-  name     String
-  slug     String    @unique
-  products Product[]
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  icon      String?
+  order     Int       @default(0)
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String
+  link      String?
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
 }
 
 model Product {
-  id          String      @id @default(uuid())
+  id          String     @id @default(uuid())
   title       String
-  slug        String      @unique
+  slug        String     @unique
   description String
-  price       Decimal     @db.Decimal(10, 2)
-  stock       Int         @default(0)
+  price       Decimal    @db.Decimal(10, 2)
+  oldPrice    Decimal?   @db.Decimal(10, 2)
+  stock       Int        @default(0)
   images      String[]
-  specs       Json        @default("{}")
-  
+  specs       Json?
+  isFeatured  Boolean    @default(false)
   categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
-  orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
+  category    Category   @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  cartItems   CartItem[]
+  favorites   Favorite[]
 }
 
-model Order {
-  id          String      @id @default(uuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  status      OrderStatus @default(PENDING)
-  totalAmount Decimal     @db.Decimal(10, 2)
-  address     String
-  items       OrderItem[]
-  createdAt   DateTime    @default(now())
-}
-
-model OrderItem {
-  id        String  @id @default(uuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+model CartItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
-  price     Decimal @db.Decimal(10, 2)
-  quantity  Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+
+  @@unique([userId, productId])
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
 }

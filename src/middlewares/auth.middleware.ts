@@ -1,22 +1,33 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'dev_access_secret_15m';
+export interface AuthPayload {
+  userId: string;
+  role: string;
+}
 
-export const authMiddleware = (req: any, res: Response, next: NextFunction) => {
+export interface AuthenticatedRequest extends Request {
+  user?: AuthPayload;
+}
+
+export const authMiddleware = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Токен отсутствует' });
   }
 
-  const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, ACCESS_SECRET);
+    const secret = process.env.JWT_ACCESS_SECRET || 'access_secret';
+    const decoded = jwt.verify(token, secret) as AuthPayload;
     req.user = decoded;
     next();
-  } catch {
-    return res.status(401).json({ success: false, message: 'Недействительный или истекший токен' });
+  } catch (err) {
+    return res.status(403).json({ success: false, message: 'Недействительный токен' });
   }
 };
