@@ -32,7 +32,6 @@ export const getProductsList = async (query: GetProductsParams) => {
   const limit = Math.max(Number(query.limit) || 12, 1);
   const skip = (page - 1) * limit;
 
-  // Типизируем через тип аргументов findMany
   type FindManyArgs = NonNullable<Parameters<typeof prisma.product.findMany>[0]>;
   const where: NonNullable<FindManyArgs['where']> = {};
 
@@ -56,7 +55,7 @@ export const getProductsList = async (query: GetProductsParams) => {
     orderBy = { createdAt: 'desc' };
   }
 
-  const [total, items] = await Promise.all([
+  const [total, data] = await Promise.all([
     prisma.product.count({ where }),
     prisma.product.findMany({
       where,
@@ -76,13 +75,13 @@ export const getProductsList = async (query: GetProductsParams) => {
   ]);
 
   return {
-    items,
-    pagination: {
+    meta: {
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit),
     },
+    data,
   };
 };
 

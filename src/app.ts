@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import productRoutes from './modules/products/product.routes';
 import authRoutes from './modules/auth/auth.routes';
+import cartRoutes from './modules/cart/cart.routes';
+import favoritesRoutes from './modules/favorites/favorites.routes';
 
 const app = express();
 
@@ -18,6 +20,8 @@ app.use(cookieParser());
 
 // Эндпоинты API v1
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/cart', cartRoutes);
+app.use('/api/v1/favorites', favoritesRoutes);
 app.use('/api/v1', productRoutes);
 
 app.get('/health', (_req: Request, res: Response) => {
