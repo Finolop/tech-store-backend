@@ -26,6 +26,8 @@ model User {
 
   cartItems    CartItem[]
   favorites    Favorite[]
+  orders       Order[]
+
 }
 
 model RefreshToken {
@@ -75,6 +77,7 @@ model Product {
 
   cartItems   CartItem[]
   favorites   Favorite[]
+  orderItems  OrderItem[]
 }
 
 model CartItem {
@@ -96,4 +99,36 @@ model Favorite {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+}
+
+enum OrderStatus {
+  PENDING     // Ожидает оплаты / обработки
+  PAID        // Оплачен
+  SHIPPED     // В доставке
+  DELIVERED   // Доставлен
+  CANCELLED   // Отменен
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          OrderStatus @default(PENDING)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  deliveryAddress String
+  contactPhone    String
+  comment         String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  price     Decimal  @db.Decimal(10, 2)
+  quantity  Int      @default(1)
 }
